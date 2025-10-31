@@ -1,0 +1,24 @@
+.first{
+    background-color: rgb(150, 55, 197);
+   color: white; 
+   
+   text-align: center;
+  }
+.boxx{
+    margin: 20px ;
+    margin-left: 15%;
+    margin-right: 20%;
+}
+th{
+    width: 220px;
+    padding: 10px;
+}
+.body{
+    background-color: rgb(166, 165, 165);
+    color: rgb(7, 7, 7);
+}
+
+.form{
+ margin-left: 50px;
+}
+
