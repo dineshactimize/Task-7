@@ -106,34 +106,95 @@ useEffect(()=>{
 
 
 
-      <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+     
+      <div className="modal fade" id="addModal" tabIndex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header ">
+              <h5 className="modal-title" id="addModalLabel">Add New Student</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSubmit} className='form'>
+                <div className="mb-3">
+                  <label className="form-label">Name</label>
+                  <input type="text" className={`form-control ${errname ? 'is-invalid' : ''}`}placeholder='Enter your Name' value={name} onChange={(e) => setName(e.target.value)} />
+                  {errname && <div className="invalid-feedback">{errname}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Place</label>
+                  <input type="text" className={`form-control ${errplace ? 'is-invalid' : ''}`}placeholder='Enter Place'value={place} onChange={(e) => setPlace(e.target.value)} />
+                  {errplace && <div className="invalid-feedback">{errplace}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Phone</label>
+                  <input type="text" className={`form-control ${errphone ? 'is-invalid' : ''}`} placeholder='Enter Phone Number' value={phone}  onChange={(e) => setPhone(e.target.value)} />
+                  {errphone && <div className="invalid-feedback">{errphone}</div>}
+                </div>
+
+                <div className="d-flex justify-content-end gap-2">
+                  <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                  <button className="btn btn-primary" type="submit">Add Student</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div className="modal fade" id="editModal" tabIndex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+              <h5 className="modal-title" id="editModalLabel">Edit Student Details</h5>
               <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit} className='form'>
-                <label>Name</label><br />
-                <input type="text" placeholder='Enter your Name' value={name} onChange={(e) => setName(e.target.value)} /><br />
-                <p className='text-danger'>{errname}</p>
-                <label>Place</label><br />
-                <input type="text" placeholder='PLACE' value={place} onChange={(e) => setPlace(e.target.value)} /><br />
-                <p className='text-danger'>{errplace}</p>
+                <div className="mb-3">
+                  <label className="form-label">Name</label>
+                  <input 
+                    type="text" 
+                    className={`form-control ${errname ? 'is-invalid' : ''}`}
+                    placeholder='Enter your Name' 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                  />
+                  {errname && <div className="invalid-feedback">{errname}</div>}
+                </div>
 
-                <label>Phone</label><br />
-                <input type="text" placeholder='PHONE' value={phone} onChange={(e) => setPhone(e.target.value)} />
-                <br />
-                <p className='text-danger'>{errphone}</p>
+                <div className="mb-3">
+                  <label className="form-label">Place</label>
+                  <input 
+                    type="text" 
+                    className={`form-control ${errplace ? 'is-invalid' : ''}`}
+                    placeholder='Enter Place' 
+                    value={place} 
+                    onChange={(e) => setPlace(e.target.value)} 
+                  />
+                  {errplace && <div className="invalid-feedback">{errplace}</div>}
+                </div>
 
-                <button className='btb btn-primary' type="submit">{editingId ? 'Update' : 'Add'}</button>
-                {editingId && <button className='btn btn-primary' type="button" onClick={resetForm} style={{ marginLeft: 8 }}>Cancel</button>}
+                <div className="mb-3">
+                  <label className="form-label">Phone</label>
+                  <input 
+                    type="text" 
+                    className={`form-control ${errphone ? 'is-invalid' : ''}`}
+                    placeholder='Enter Phone Number' 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                  />
+                  {errphone && <div className="invalid-feedback">{errphone}</div>}
+                </div>
+
+                <div className="d-flex justify-content-end gap-2">
+                  <button className="btn btn-secondary" type="button" data-bs-dismiss="modal" onClick={resetForm}>Cancel</button>
+                  <button className="btn btn-primary" type="submit">Update Student</button>
+                </div>
               </form>
-            </div>
-            <div className="modal-footer">
-              {/* <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" className="btn btn-primary" >Save changes</button> */}
             </div>
           </div>
         </div>
@@ -147,11 +208,10 @@ useEffect(()=>{
           <h4>Student Details:</h4>
         </div>
          <div className='d-flex justify-content-end'>
-        <button type="button"  className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-          Add
-        </button>
-      </div>
-      
+          <button type="button" className="btn btn-primary"data-bs-toggle="modal" data-bs-target="#addModal"onClick={resetForm}>
+            Add Student
+          </button>
+        </div>
      
       <div className='d-none d-lg-block'>
        
@@ -169,7 +229,7 @@ useEffect(()=>{
         <tbody className='body'>
           {entries.length === 0 && (
             <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: 12 }}>No entries yet. Add one using the form above.</td>
+              <td colSpan={5} style={{ textAlign: 'center', padding: 12 }}>No entries yet.</td>
             </tr>
           )}
 
@@ -180,9 +240,18 @@ useEffect(()=>{
               <td>{entry.place}</td>
               <td>{entry.phone}</td>
               <td>
-                <button type="button" className='btn btn-primary' onClick={() => handleView(entry)}  data-bs-toggle="modal" data-bs-target="#exampleModal1" style={{ marginRight: 6 }}><i class="bi bi-eye-fill"></i></button>
-                <button type="button" className='btn btn-warning' onClick={() => handleEdit(entry)} data-bs-toggle="modal" data-bs-target="#exampleModal" style={{ marginRight: 6 }}><i class="bi bi-pencil-square"></i></button>
-                <button type="button" className='btn btn-danger' onClick={() => handleDelete(entry.id)}><i class="bi bi-trash3-fill"></i></button>
+                <button 
+                  type="button" className='btn btn-primary 'onClick={() => handleView(entry)}data-bs-toggle="modal"data-bs-target="#exampleModal1"style={{ marginRight: 6 }}>
+                  <i className="bi bi-eye-fill"></i>
+                </button>
+                <button 
+                  type="button" className='btn btn-warning ' onClick={() => handleEdit(entry)} data-bs-toggle="modal" data-bs-target="#editModal" style={{ marginRight: 6 }}>
+                  <i className="bi bi-pencil-square"></i>
+                </button>
+                <button 
+                  type="button" className='btn btn-danger ' onClick={() => handleDelete(entry.id)}>
+                  <i className="bi bi-trash3-fill"></i>
+                </button>
               </td>
             </tr>
           ))}
@@ -192,8 +261,8 @@ useEffect(()=>{
       
 
     <div className='d-block d-lg-none'>
-      <div className="container-fluid mt-4">
-        <div className="row row-cols-1 row-cols-md-3 g-4">
+      <div className="container mt-4">
+        <div className="row row-cols-1 row-cols-md-2 g-4">
           {entries.length === 0 && (
             <div className="col">
               <div className="card h-100">
@@ -208,8 +277,8 @@ useEffect(()=>{
               <div className="card h-100">
                 <div className="card-body">
                   <p className="card-text">
-                    <strong>Name:</strong>  {entry.name} <br />
                     <strong>S.No:</strong> {index + 1}<br />
+                    <strong>Name:</strong>  {entry.name} <br />
                     <strong>Place:</strong> {entry.place}<br />
                     <strong>Phone:</strong> {entry.phone}
                   </p>
@@ -230,12 +299,12 @@ useEffect(()=>{
 
 
 
-<div className="modal fade1" id="exampleModal1" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div className="modal fade" id="exampleModal1" tabIndex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h1 className="modal-title fs-5" id="exampleModalLabel">Viewing</h1>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 className="modal-title" id="viewModalLabel">View Student Details</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
                {viewingEntry && (
@@ -248,8 +317,13 @@ useEffect(()=>{
       )}
             </div>
             <div className="modal-footer">
-               <button type="button" className="btn btn-primary"  data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleEdit(viewingEntry)} style={{ marginRight: 8 }}>Edit</button>
-               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+              <button 
+                type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal" onClick={() => handleEdit(viewingEntry)}>
+                Edit
+              </button>
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                Close
+              </button>
             </div>
           </div>
         </div>
