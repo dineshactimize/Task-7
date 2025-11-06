@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
+import {db} from './firebase';
+import{collection,addDoc,getDocs,deleteDoc,doc,updateDoc}from 'firebase/firestore';
 
 const Table = () => {
-  const [entries, setEntries] = useState(()=>{
-  let temp =localStorage.getItem('users');
-   return temp ? JSON.parse(temp):[];
-})
+  const [entries, setEntries] = useState([])
   const [name, setName] = useState("")
   const [place, setPlace] = useState("")
   const [phone, setPhone] = useState("")
@@ -21,6 +20,16 @@ useEffect(()=>{
   setErrphone("");
 },[name,place,phone])
 
+useEffect(() => {
+  const fetchEntries = async () => {
+      const colRef = collection(db, 'users')
+      const snapshot = await getDocs(colRef)
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      setEntries(data)
+  }
+  fetchEntries()
+}, [])
+
   const resetForm = () => {
     setName("")
     setPlace("")
@@ -28,7 +37,7 @@ useEffect(()=>{
     setEditingId(null)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault()
 
     if (!name.trim()) {
@@ -53,22 +62,19 @@ useEffect(()=>{
       return
     }
     if (editingId !== null) {
-      setEntries(prev => {
-        const updated = prev.map(it => it.id === editingId ? { ...it, name: name.trim(), place: place.trim(), phone: phone.trim() } : it);
-        localStorage.setItem('users', JSON.stringify(updated));
-        alert('Entry updated successfully!');
-        return updated;
-      })
+        const docRef = doc(db, 'users', editingId)
+        await updateDoc(docRef, { name: name.trim(), place: place.trim(), phone: phone.trim() })
+        setEntries(prev => prev.map(it => it.id === editingId ? { ...it, name: name.trim(), place: place.trim(), phone: phone.trim() } : it))
+        alert('Entry updated successfully!')
+      
     } else {
-      const entry = { id: Math.floor(Math.random()*100), name: name.trim(), place: place.trim(), phone: phone.trim() }
-      setEntries(prev => {
-        const updated = [...prev, entry];
-        localStorage.setItem('users', JSON.stringify(updated));
-        alert('Entry added successfully!');
-        return updated;
-      })
+      
+        const colRef = collection(db, 'users')
+        const docRef = await addDoc(colRef, { name: name.trim(), place: place.trim(), phone: phone.trim() })
+        const entry = { id: docRef.id, name: name.trim(), place: place.trim(), phone: phone.trim() }
+        setEntries(prev => [...prev, entry])
+        alert('Entry added successfully!')
     }
-    console.log('object')
     resetForm()
     setViewingEntry(null)
   }
@@ -82,16 +88,13 @@ useEffect(()=>{
     setViewingEntry(null)
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const ok = window.confirm('Are you sure you want to delete this entry?')
     if (!ok) return
-    setEntries(prev => {
-      const updated = prev.filter(it => it.id !== id);
-      localStorage.setItem('users', JSON.stringify(updated));
-      alert('Entry deleted successfully!');
-      return updated;
-    })
-
+      await deleteDoc(doc(db, 'users', id))
+      setEntries(prev => prev.filter(it => it.id !== id))
+      alert('Entry deleted successfully!')
+    
     if (viewingEntry && viewingEntry.id === id) setViewingEntry(null)
     if (editingId === id) resetForm()
   }
@@ -103,9 +106,6 @@ useEffect(()=>{
 
   return (
     <div>
-
-
-
      
       <div className="modal fade" id="addModal" tabIndex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
         <div className="modal-dialog">
@@ -283,9 +283,9 @@ useEffect(()=>{
                     <strong>Phone:</strong> {entry.phone}
                   </p>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-primary btn-sm" onClick={() => handleView(entry)}><i class="bi bi-eye-fill"></i></button>
-                    <button className="btn btn-warning btn-sm" onClick={() => handleEdit(entry)}><i class="bi bi-pencil-square"></i></button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(entry.id)}><i class="bi bi-trash3-fill"></i></button>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleView(entry)}><i className="bi bi-eye-fill"></i></button>
+                        <button className="btn btn-warning btn-sm" onClick={() => handleEdit(entry)}><i className="bi bi-pencil-square"></i></button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(entry.id)}><i className="bi bi-trash3-fill"></i></button>
                   </div>
                 </div>
               </div>
