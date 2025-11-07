@@ -4,6 +4,9 @@
    
    text-align: center;
   }
+  .inputs{
+    width: 300px;
+  }
 .boxx{
     margin: 20px ;
     margin-left: 15%;

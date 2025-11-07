@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import {db} from './firebase';
-import{collection,addDoc,getDocs,deleteDoc,doc,updateDoc}from 'firebase/firestore';
+import{collection,addDoc,getDocs,deleteDoc,doc,updateDoc,query,orderBy}from 'firebase/firestore';
+import { PropagateLoader } from 'react-spinners';
+import { ToastContainer,toast } from 'react-toastify';
+import StudentModal from './components/StudentModal';
+
+
 
 const Table = () => {
   const [entries, setEntries] = useState([])
@@ -9,6 +14,7 @@ const Table = () => {
   const [phone, setPhone] = useState("")
   const [editingId, setEditingId] = useState(null)
   const [viewingEntry, setViewingEntry] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const[errname,setErrname] = useState("")
   const[errplace,setErrplace]=useState("")
@@ -20,12 +26,24 @@ useEffect(()=>{
   setErrphone("");
 },[name,place,phone])
 
+const notify=()=>{toast('Student added successfully!')};
+const notifyupdate=()=>{toast('Student updated sucessdully!')};
+const notifydelete=()=>{toast('Student deleted sucessdully!')};
+
 useEffect(() => {
   const fetchEntries = async () => {
-      const colRef = collection(db, 'users')
-      const snapshot = await getDocs(colRef)
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-      setEntries(data)
+      try {
+        setLoading(true)
+        // const colRef = collection(db, 'users')
+        const q = query(collection(db, 'users'), orderBy('time', 'asc'))
+        const snapshot = await getDocs(q)
+        const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+        setEntries(data)
+      } catch (err) {
+        console.error('Error fetching entries:', err)
+      } finally {
+        setLoading(false)
+      }
   }
   fetchEntries()
 }, [])
@@ -65,15 +83,15 @@ useEffect(() => {
         const docRef = doc(db, 'users', editingId)
         await updateDoc(docRef, { name: name.trim(), place: place.trim(), phone: phone.trim() })
         setEntries(prev => prev.map(it => it.id === editingId ? { ...it, name: name.trim(), place: place.trim(), phone: phone.trim() } : it))
-        alert('Entry updated successfully!')
+       notifyupdate();
       
     } else {
-      
+         
         const colRef = collection(db, 'users')
-        const docRef = await addDoc(colRef, { name: name.trim(), place: place.trim(), phone: phone.trim() })
+        const docRef = await addDoc(colRef, { time: Date.now(), name: name.trim(), place: place.trim(), phone: phone.trim() })
         const entry = { id: docRef.id, name: name.trim(), place: place.trim(), phone: phone.trim() }
         setEntries(prev => [...prev, entry])
-        alert('Entry added successfully!')
+        notify();
     }
     resetForm()
     setViewingEntry(null)
@@ -93,7 +111,7 @@ useEffect(() => {
     if (!ok) return
       await deleteDoc(doc(db, 'users', id))
       setEntries(prev => prev.filter(it => it.id !== id))
-      alert('Entry deleted successfully!')
+      notifydelete();
     
     if (viewingEntry && viewingEntry.id === id) setViewingEntry(null)
     if (editingId === id) resetForm()
@@ -107,98 +125,20 @@ useEffect(() => {
   return (
     <div>
      
-      <div className="modal fade" id="addModal" tabIndex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header ">
-              <h5 className="modal-title" id="addModalLabel">Add New Student</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit} className='form'>
-                <div className="mb-3">
-                  <label className="form-label">Name</label>
-                  <input type="text" className={`form-control ${errname ? 'is-invalid' : ''}`}placeholder='Enter your Name' value={name} onChange={(e) => setName(e.target.value)} />
-                  {errname && <div className="invalid-feedback">{errname}</div>}
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Place</label>
-                  <input type="text" className={`form-control ${errplace ? 'is-invalid' : ''}`}placeholder='Enter Place'value={place} onChange={(e) => setPlace(e.target.value)} />
-                  {errplace && <div className="invalid-feedback">{errplace}</div>}
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Phone</label>
-                  <input type="text" className={`form-control ${errphone ? 'is-invalid' : ''}`} placeholder='Enter Phone Number' value={phone}  onChange={(e) => setPhone(e.target.value)} />
-                  {errphone && <div className="invalid-feedback">{errphone}</div>}
-                </div>
-
-                <div className="d-flex justify-content-end gap-2">
-                  <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-                  <button className="btn btn-primary" type="submit">Add Student</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      
-      <div className="modal fade" id="editModal" tabIndex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="editModalLabel">Edit Student Details</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit} className='form'>
-                <div className="mb-3">
-                  <label className="form-label">Name</label>
-                  <input 
-                    type="text" 
-                    className={`form-control ${errname ? 'is-invalid' : ''}`}
-                    placeholder='Enter your Name' 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                  />
-                  {errname && <div className="invalid-feedback">{errname}</div>}
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Place</label>
-                  <input 
-                    type="text" 
-                    className={`form-control ${errplace ? 'is-invalid' : ''}`}
-                    placeholder='Enter Place' 
-                    value={place} 
-                    onChange={(e) => setPlace(e.target.value)} 
-                  />
-                  {errplace && <div className="invalid-feedback">{errplace}</div>}
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Phone</label>
-                  <input 
-                    type="text" 
-                    className={`form-control ${errphone ? 'is-invalid' : ''}`}
-                    placeholder='Enter Phone Number' 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
-                  />
-                  {errphone && <div className="invalid-feedback">{errphone}</div>}
-                </div>
-
-                <div className="d-flex justify-content-end gap-2">
-                  <button className="btn btn-secondary" type="button" data-bs-dismiss="modal" onClick={resetForm}>Cancel</button>
-                  <button className="btn btn-primary" type="submit">Update Student</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StudentModal 
+        isEdit={editingId !== null}
+        name={name}
+        place={place}
+        phone={phone}
+        errname={errname}
+        errplace={errplace}
+        errphone={errphone}
+        onSubmit={handleSubmit}
+        onNameChange={(e) => setName(e.target.value)}
+        onPlaceChange={(e) => setPlace(e.target.value)}
+        onPhoneChange={(e) => setPhone(e.target.value)}
+        onCancel={resetForm}
+      />
       
       <div className='boxx p-2'>
          <div className='text-center'>
@@ -208,91 +148,104 @@ useEffect(() => {
           <h4>Student Details:</h4>
         </div>
          <div className='d-flex justify-content-end'>
-          <button type="button" className="btn btn-primary"data-bs-toggle="modal" data-bs-target="#addModal"onClick={resetForm}>
+          <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#studentModal" onClick={resetForm}>
             Add Student
           </button>
+           <ToastContainer/>
+            
         </div>
      
       <div className='d-none d-lg-block'>
-       
-      <table className='first' style={{ marginTop: 16 }}>
-        <thead>
-          <tr>
-            <th>S.No</th>
-            <th>NAME</th>
-            <th>PLACE</th>
-            <th>PHONE</th>
-            <th>ACTIONS</th>
-          </tr>
-        </thead>
+        {loading ? (
+          <div className="d-flex justify-content-center" style={{ marginTop: 100 }}>
+            <PropagateLoader color="#010710ff" loading={loading} size={20} />
+          </div>
+        ) : (
+          <table className='first' style={{ marginTop: 16 }}>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>NAME</th>
+                <th>PLACE</th>
+                <th>PHONE</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
 
-        <tbody className='body'>
-          {entries.length === 0 && (
-            <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: 12 }}>No entries yet.</td>
-            </tr>
-          )}
+            <tbody className='body'>
+              {entries.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: 12 }}>No entries yet.</td>
+                </tr>
+              )}
 
-          {entries.map((entry, index) => (
-            <tr key={entry.id}>
-              <td>{index+1}</td>
-              <td>{entry.name}</td>
-              <td>{entry.place}</td>
-              <td>{entry.phone}</td>
-              <td>
-                <button 
-                  type="button" className='btn btn-primary 'onClick={() => handleView(entry)}data-bs-toggle="modal"data-bs-target="#exampleModal1"style={{ marginRight: 6 }}>
-                  <i className="bi bi-eye-fill"></i>
-                </button>
-                <button 
-                  type="button" className='btn btn-warning ' onClick={() => handleEdit(entry)} data-bs-toggle="modal" data-bs-target="#editModal" style={{ marginRight: 6 }}>
-                  <i className="bi bi-pencil-square"></i>
-                </button>
-                <button 
-                  type="button" className='btn btn-danger ' onClick={() => handleDelete(entry.id)}>
-                  <i className="bi bi-trash3-fill"></i>
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              {entries.map((entry, index) => (
+                <tr key={entry.id}>
+                  <td>{index+1}</td>
+                  <td>{entry.name}</td>
+                  <td>{entry.place}</td>
+                  <td>{entry.phone}</td>
+                  <td>
+                    <button 
+                      type="button" className='btn btn-primary ' onClick={() => handleView(entry)} data-bs-toggle="modal" data-bs-target="#exampleModal1" style={{ marginRight: 6 }}>
+                      <i className="bi bi-eye-fill"></i>
+                    </button>
+                    <button 
+                      type="button" className='btn btn-warning ' onClick={() => handleEdit(entry)} data-bs-toggle="modal" data-bs-target="#studentModal" style={{ marginRight: 6 }}>
+                      <i className="bi bi-pencil-square"></i>
+                    </button>
+                    <button 
+                      type="button" className='btn btn-danger ' onClick={() => handleDelete(entry.id)}>
+                      <i className="bi bi-trash3-fill"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       
 
     <div className='d-block d-lg-none'>
-      <div className="container mt-4">
-        <div className="row row-cols-1 row-cols-md-2 g-4">
-          {entries.length === 0 && (
-            <div className="col">
-              <div className="card h-100">
-                <div className="card-body">
-                  <p className="card-text text-center">No entries yet. Click "Add" to add one.</p>
-                </div>
-              </div>
-            </div>
-          )}
-          {entries.map((entry, index) => (
-            <div className="col" key={entry.id}>
-              <div className="card h-100">
-                <div className="card-body">
-                  <p className="card-text">
-                    <strong>S.No:</strong> {index + 1}<br />
-                    <strong>Name:</strong>  {entry.name} <br />
-                    <strong>Place:</strong> {entry.place}<br />
-                    <strong>Phone:</strong> {entry.phone}
-                  </p>
-                  <div className="d-flex gap-2">
-                        <button className="btn btn-primary btn-sm" onClick={() => handleView(entry)}><i className="bi bi-eye-fill"></i></button>
-                        <button className="btn btn-warning btn-sm" onClick={() => handleEdit(entry)}><i className="bi bi-pencil-square"></i></button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(entry.id)}><i className="bi bi-trash3-fill"></i></button>
+      {loading ? (
+        <div className="d-flex justify-content-center" style={{ marginTop: 100 }}>
+          <PropagateLoader color="#010305ff" loading={loading} size={20} />
+        </div>
+      ) : (
+        <div className="container mt-4">
+          <div className="row row-cols-1 row-cols-md-2 g-4">
+            {entries.length === 0 && (
+              <div className="col">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <p className="card-text text-center">No entries yet. Click "Add" to add one.</p>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )}
+            {entries.map((entry, index) => (
+              <div className="col" key={entry.id}>
+                <div className="card h-100">
+                  <div className="card-body">
+                    <p className="card-text">
+                      <strong>S.No:</strong> {index + 1}<br />
+                      <strong>Name:</strong>  {entry.name} <br />
+                      <strong>Place:</strong> {entry.place}<br />
+                      <strong>Phone:</strong> {entry.phone}
+                    </p>
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-primary btn-sm" onClick={() => handleView(entry)}><i className="bi bi-eye-fill"></i></button>
+                      <button className="btn btn-warning btn-sm" onClick={() => handleEdit(entry)}><i className="bi bi-pencil-square"></i></button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(entry.id)}><i className="bi bi-trash3-fill"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
     </div>
 
@@ -318,7 +271,7 @@ useEffect(() => {
             </div>
             <div className="modal-footer">
               <button 
-                type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal" onClick={() => handleEdit(viewingEntry)}>
+                type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#studentModal" onClick={() => handleEdit(viewingEntry)}>
                 Edit
               </button>
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
